@@ -72,6 +72,9 @@ class ProductsService {
   Stream<List<Product>> watchFilteredProducts({
     String? searchQuery,
     String? name,
+    DateTime? created_at,
+    DateTime? updated_at,
+    bool? ascending,
     String? uuid,
     int? categoryId,
     String? barcode,
@@ -84,6 +87,9 @@ class ProductsService {
     return _buildFilteredQuery(
       searchQuery: searchQuery,
       name: name,
+      created_at: created_at,
+      updated_at: updated_at,
+      ascending: ascending,
       uuid: uuid,
       categoryId: categoryId,
       barcode: barcode,
@@ -99,6 +105,9 @@ class ProductsService {
   SimpleSelectStatement<$ProductsTable, Product> _buildFilteredQuery({
     String? searchQuery,
     String? name,
+    DateTime? updated_at,
+    DateTime? created_at,
+    bool? ascending,
     String? uuid,
     int? categoryId,
     String? barcode,
@@ -117,7 +126,13 @@ class ProductsService {
         (product) =>
             product.name.contains(cleanQuery) |
             product.uuid.contains(cleanQuery) |
-            product.barcode.contains(cleanQuery),
+            product.barcode.contains(cleanQuery) |
+            product.photoPath.contains(cleanQuery) |
+            product.categoryId.equals(int.parse(cleanQuery)) |
+            product.purchasePrice.equals(int.parse(cleanQuery)) |
+            product.salePrice.equals(int.parse(cleanQuery)) |
+            product.stockQuantity.equals(int.parse(cleanQuery)) |
+            product.alertThreshold.equals(int.parse(cleanQuery)),
       );
     }
 
@@ -155,6 +170,16 @@ class ProductsService {
 
     if (alertThreshold != null) {
       query.where((product) => product.alertThreshold.equals(alertThreshold));
+    }
+    if (created_at != null) {
+      query.where(
+        (product) => product.createdAt.equals(created_at.toIso8601String()),
+      );
+    }
+    if (updated_at != null) {
+      query.where(
+        (product) => product.updatedAt.equals(updated_at.toIso8601String()),
+      );
     }
 
     return query;
@@ -219,8 +244,8 @@ class ProductsService {
 
   /// Supprime un produit par son ID
   Future<int> deleteProduct(int id) async {
-    return await (database.delete(database.products)
-          ..where((product) => product.id.equals(id)))
-        .go();
+    return await (database.delete(
+      database.products,
+    )..where((product) => product.id.equals(id))).go();
   }
 }
