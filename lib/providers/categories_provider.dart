@@ -1,20 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:gestion_stock/repositories/categories_repository.dart';
+import 'package:gestion_stock/services/categories_service.dart';
 import '../core/database/app_database.dart';
 import '../core/database/database_provider.dart';
-import '../repositories/categories_repository.dart';
-import '../services/categories_service.dart';
-
-final categoriesServiceProvider = Provider<CategoriesService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  return CategoriesService(db);
-});
-
-final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) {
-  final service = ref.watch(categoriesServiceProvider);
-  return CategoriesRepository(service);
-});
-
+import '../providers/categories_provider.dart';
+ final categoriesRepositoryProvider= Provider<CategoriesRepository>((ref) {
+   return CategoriesRepository(ref.watch(categoriesServiceProvier));
+ });
+ final categoriesServiceProvier= Provider<CategoriesService>((ref) {
+   return CategoriesService(ref.watch(appDatabaseProvider));
+ });
 class CategoryFilterState {
   final String searchQuery;
   final DateTime? startDate;
