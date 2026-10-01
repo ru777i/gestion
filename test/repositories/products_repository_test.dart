@@ -25,6 +25,7 @@ void main() {
     final id = await repository.createProduct(
       name: 'Laptop',
       uuid: 'prod-uuid-1',
+      barcode: 'bc-laptop',
       purchasePrice: 300000,
       salePrice: 400000,
       stockQuantity: 10,
@@ -52,5 +53,47 @@ void main() {
 
     final deleted = await repository.deleteProduct(id);
     expect(deleted, 1);
+  });
+
+  test('Filtrage avancé des produits par catégorie et prix', () async {
+    final categoryId = await database.into(database.categories).insert(
+          CategoriesCompanion.insert(
+            name: 'Informatique',
+            createdAt: '2026-09-30 10:00:00',
+            updatedAt: '2026-09-30 10:00:00',
+          ),
+        );
+
+    await repository.createProduct(
+      name: 'Souris',
+      uuid: 'prod-uuid-2',
+      categoryId: categoryId,
+      barcode: 'bc-souris',
+      purchasePrice: 5000,
+      salePrice: 8000,
+      stockQuantity: 25,
+      alertThreshold: 5,
+    );
+
+    await repository.createProduct(
+      name: 'Clavier',
+      uuid: 'prod-uuid-3',
+      categoryId: categoryId,
+      barcode: 'bc-clavier',
+      purchasePrice: 10000,
+      salePrice: 15000,
+      stockQuantity: 15,
+      alertThreshold: 3,
+    );
+
+    final resultsByCategory = await repository.filterProducts(categoryId: categoryId);
+    expect(resultsByCategory.length, 2);
+
+    final resultsByPrice = await repository.filterProducts(salePrice: 8000);
+    expect(resultsByPrice.length, 1);
+    expect(resultsByPrice.first.name, 'Souris');
+
+    final streamResults = repository.watchFilteredProducts(searchQuery: 'Clavier');
+    expect(streamResults, emits(isA<List<Product>>().having((l) => l.length, 'length', 1)));
   });
 }

@@ -70,6 +70,7 @@ class ProductsRepository {
     String? photoPath,
     int? purchasePrice,
     int? salePrice,
+    int? isActive,
     int? stockQuantity,
     int? alertThreshold,
   }) {

@@ -121,19 +121,24 @@ class ProductsService {
 
     if (searchQuery != null && searchQuery.trim().isNotEmpty) {
       final cleanQuery = searchQuery.trim();
+      final parsedInt = int.tryParse(cleanQuery);
 
-      query.where(
-        (product) =>
-            product.name.contains(cleanQuery) |
+      query.where((product) {
+        Expression<bool> condition = product.name.contains(cleanQuery) |
             product.uuid.contains(cleanQuery) |
-            product.barcode.contains(cleanQuery) |
-            product.photoPath.contains(cleanQuery) |
-            product.categoryId.equals(int.parse(cleanQuery)) |
-            product.purchasePrice.equals(int.parse(cleanQuery)) |
-            product.salePrice.equals(int.parse(cleanQuery)) |
-            product.stockQuantity.equals(int.parse(cleanQuery)) |
-            product.alertThreshold.equals(int.parse(cleanQuery)),
-      );
+            product.barcode.contains(cleanQuery);
+
+        if (parsedInt != null) {
+          condition = condition |
+              product.categoryId.equals(parsedInt) |
+              product.purchasePrice.equals(parsedInt) |
+              product.salePrice.equals(parsedInt) |
+              product.stockQuantity.equals(parsedInt) |
+              product.alertThreshold.equals(parsedInt);
+        }
+
+        return condition;
+      });
     }
 
     if (name != null && name.trim().isNotEmpty) {
