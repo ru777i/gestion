@@ -3,11 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:gestion_stock/core/database/app_database.dart';
 import 'package:gestion_stock/repositories/users_repository.dart';
+import 'package:gestion_stock/services/users_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late AppDatabase database;
+  late UsersService service;
   late UsersRepository repository;
 
   setUp(() {
@@ -15,7 +17,8 @@ void main() {
       NativeDatabase.memory(),
     );
 
-    repository = UsersRepository(database);
+    service = UsersService(database);
+    repository = UsersRepository(service);
   });
 
   tearDown(() async {
@@ -40,7 +43,7 @@ void main() {
     expect(user.isActive, 1);
   });
 
-  test('Un utilisateur peut être recherché par username', () async {
+  test('Un utilisateur peut être recherché par nomUtilisateur', () async {
     await repository.createUser(
       username: 'vendeur1',
       fullName: 'Jean Dupont',
@@ -56,7 +59,7 @@ void main() {
     expect(user.role, 'vendeur');
   });
 
-  test('Une recherche avec un username inexistant retourne null', () async {
+  test('Une recherche avec un nomUtilisateur inexistant retourne null', () async {
     final user = await repository.findByUsername('inexistant');
 
     expect(user, isNull);
