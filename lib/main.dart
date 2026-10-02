@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gestion_stock/core/widgets/image_picker.dart';
+import 'package:gestion_stock/views/products/products_sreen.dart';
+import 'package:gestion_stock/views/products/widgets/product_form.dart';
 import 'views/categories/categories_screen.dart';
 
 void main() {
@@ -36,7 +39,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: CategoriesScreen()
+      home: ProductsScreen()
     );
   }
 }
