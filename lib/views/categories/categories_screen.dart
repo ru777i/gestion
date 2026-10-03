@@ -152,7 +152,22 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gestion des Catégories'),
+
+        title: const Text(
+          'Gestion des Catégories',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        elevation: 10,
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(Icons.menu_rounded),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
         actions: [
           IconButton(
             icon: Icon(
