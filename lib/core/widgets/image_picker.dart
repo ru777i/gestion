@@ -3,6 +3,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+/// Une feuille modale (BottomSheet) permettant de sélectionner une image
+/// soit depuis la galerie, soit en prenant une photo avec la caméra.
+///
+/// Exemple d'utilisation :
+/// ```dart
+/// final File? imageFile = await ImagePickerSheet.show(context);
+/// if (imageFile != null) {
+///   // Traiter l'image sélectionnée
+/// }
+/// ```
 class ImagePickerSheet extends StatelessWidget {
   const ImagePickerSheet({super.key});
 

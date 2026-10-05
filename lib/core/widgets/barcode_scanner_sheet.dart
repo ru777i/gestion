@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+/// Un widget de type BottomSheet affichant une caméra pour scanner des codes-barres.
+/// Utilise la bibliothèque `mobile_scanner`.
+///
+/// Exemple d'utilisation :
+/// ```dart
+/// final scannedCode = await showModalBottomSheet<String>(
+///   context: context,
+///   isScrollControlled: true,
+///   backgroundColor: Colors.transparent,
+///   builder: (context) => const BarcodeScannerSheet(),
+/// );
+/// ```
 class BarcodeScannerSheet extends StatefulWidget {
   const BarcodeScannerSheet({super.key});
 
@@ -36,6 +48,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         child: Stack(
           children: [
+            // Caméra de scan
             MobileScanner(
               controller: _controller,
               onDetect: (BarcodeCapture capture) {
@@ -51,6 +64,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                 }
               },
             ),
+            // En-tête avec titre et bouton de fermeture
             Positioned(
               top: 16,
               left: 16,
@@ -73,6 +87,7 @@ class _BarcodeScannerSheetState extends State<BarcodeScannerSheet> {
                 ],
               ),
             ),
+            // Bouton de contrôle du flash (lampe torche)
             Positioned(
               bottom: 24,
               left: 0,
