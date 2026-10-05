@@ -6,6 +6,7 @@ import 'package:gestion_stock/providers/categories_provider.dart';
 import 'package:gestion_stock/views/products/widgets/product_form.dart';
 
 import '../../core/database/app_database.dart';
+import '../../core/widgets/barcode_scanner_sheet.dart';
 import '../../providers/products_provider.dart';
 
 /// Écran d'affichage, de filtrage et de gestion des produits.
@@ -81,6 +82,22 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
         .push(MaterialPageRoute(builder: (_) => const ProductForm()));
   }
 
+  Future<void> _scanBarcode() async {
+    final scannedCode = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const BarcodeScannerSheet(),
+    );
+
+    if (scannedCode != null && scannedCode.isNotEmpty) {
+      setState(() {
+        _onSearchChanged(scannedCode);
+        _searchController.text=scannedCode;
+      });
+    }
+  }
+
   // ============================================================
   // ACTION : NAVIGATION VERS LE FORMULAIRE DE MODIFICATION
   // ============================================================
@@ -143,7 +160,6 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                   searchController: _searchController,
                   builder: (context, controller) {
                     return SearchBar(
-
                       controller: controller,
                       hintText: 'Rechercher un produit...',
                       leading: const Icon(
@@ -151,9 +167,11 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                         size: 20,
                         color: Color(0xFF6F7B80),
                       ),
+
                       elevation: const WidgetStatePropertyAll(0),
-                      backgroundColor:
-                          const WidgetStatePropertyAll(Colors.white),
+                      backgroundColor: const WidgetStatePropertyAll(
+                        Colors.white,
+                      ),
                       padding: const WidgetStatePropertyAll(
                         EdgeInsets.symmetric(horizontal: 16),
                       ),
@@ -165,14 +183,25 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                         controller.openView();
                       },
                       trailing: [
-                        if (controller.text.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(Icons.clear, size: 20, color: Colors.grey),
-                            onPressed: () {
-                              controller.clear();
-                              _onSearchChanged('');
-                            },
-                          ),
+                        controller.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.clear,
+                                  size: 20,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  controller.clear();
+                                  _onSearchChanged('');
+                                },
+                              )
+                            : IconButton(
+                                icon: Icon(Icons.qr_code_2),
+                                onPressed: () {
+
+                                  _scanBarcode();
+                                },
+                              ),
                       ],
                     );
                   },
@@ -194,7 +223,6 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
 
                     return results.take(5).map((product) {
                       return ListTile(
-
                         leading: const Icon(Icons.inventory_2_outlined),
                         title: Text(product.name),
                         subtitle: Text(

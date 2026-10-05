@@ -6,6 +6,7 @@ import 'package:gestion_stock/providers/categories_provider.dart';
 import 'package:gestion_stock/providers/products_provider.dart';
 import 'package:gestion_stock/views/vente/panier_screen.dart';
 
+import '../../core/widgets/barcode_scanner_sheet.dart';
 import '../../providers/sale_items_provider.dart';
 
 class VenteScreen extends ConsumerStatefulWidget {
@@ -24,7 +25,21 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
     _searchController.dispose();
     super.dispose();
   }
+  Future<void> _scanBarcode() async {
+    final scannedCode = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const BarcodeScannerSheet(),
+    );
 
+    if (scannedCode != null && scannedCode.isNotEmpty) {
+      setState(() {
+        _onSearchChanged(scannedCode);
+        _searchController.text = scannedCode;
+      });
+    }
+  }
   void _onSearchChanged(String value) {
     ref.read(productFilterNotifierProvider.notifier).setSearchQuery(value);
   }
@@ -136,15 +151,27 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
                         _onSearchChanged(text);
                         controller.openView();
                       },
+
                       trailing: [
-                        if (controller.text.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(Icons.clear, size: 20, color: Colors.grey),
-                            onPressed: () {
-                              controller.clear();
-                              _onSearchChanged('');
-                            },
+                        controller.text.isNotEmpty
+                            ? IconButton(
+                          icon: const Icon(
+                            Icons.clear,
+                            size: 20,
+                            color: Colors.grey,
                           ),
+                          onPressed: () {
+                            controller.clear();
+                            _onSearchChanged('');
+                          },
+                        )
+                            : IconButton(
+                          icon: Icon(Icons.qr_code_2),
+                          onPressed: () {
+
+                            _scanBarcode();
+                          },
+                        ),
                       ],
                     );
                   },

@@ -4,6 +4,7 @@ import 'package:gestion_stock/core/database/app_database.dart';
 import 'package:gestion_stock/providers/products_provder.dart';
 import 'package:gestion_stock/views/vente/panier_screen.dart';
 
+import '../../core/widgets/barcode_scanner_sheet.dart';
 import '../../providers/sale_items_provider.dart';
 
 class VenteScreen extends ConsumerStatefulWidget {
@@ -15,10 +16,28 @@ class VenteScreen extends ConsumerStatefulWidget {
 
 class _VenteScreenState extends ConsumerState<VenteScreen> {
   SearchController _searchController = SearchController();
+
+  Future<void> _scanBarcode() async {
+    final scannedCode = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const BarcodeScannerSheet(),
+    );
+
+    if (scannedCode != null && scannedCode.isNotEmpty) {
+      setState(() {
+        _onSearchChanged(scannedCode);
+        _searchController.text = scannedCode;
+      });
+    }
+  }
+
   void _onSearchChanged(String value) {
     // Met à jour la requête de recherche dans le Notifier Riverpod des filtres de produits
     ref.read(productFilterNotifierProvider.notifier).setSearchQuery(value);
   }
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -76,80 +95,68 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
       ),
       body: Column(
         children: [
-          Row(children: [
-            SearchAnchor(
-              searchController: _searchController,
-                builder: (context, controller){
+          Row(
+            children: [
+              SearchAnchor(
+                searchController: _searchController,
+                builder: (context, controller) {
                   return SearchBar(
                     controller: controller,
                     hintText: 'Rechercher un produit ',
                     leading: const Icon(
-                    Icons.search,
-                    size: 20,
+                      Icons.search,
+                      size: 20,
                       color: Color(0xFF6F7B80),
                     ),
                     elevation: const WidgetStatePropertyAll(0),
                     backgroundColor: WidgetStatePropertyAll(Colors.white),
                     padding: const WidgetStatePropertyAll(
-                      EdgeInsets.symmetric(horizontal: 16)
-
+                      EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    onTap: (){
+                    onTap: () {
                       controller.openView();
                     },
-                    onChanged: (text){
+                    trailing: [Icon(Icons.add_card)],
+                    onChanged: (text) {
                       _onSearchChanged(text);
                       controller.openView();
                     },
-                    trailing: [
-                      if (controller.text.isNotEmpty)
-                        IconButton(
-                          icon: const Icon(Icons.clear, size: 20, color: Colors.grey),
-                          onPressed: () {
-                            controller.clear();
-                            _onSearchChanged('');
-                          },
-                        ),
-                    ],
                   );
                 },
-        suggestionsBuilder: (context, controller) async {
-          final query = controller.text;
-          final repository = ref.read(productsRepositoryProvider);
-          final results = await repository.filterProducts(
-            searchQuery: query,
-          );
+                suggestionsBuilder: (context, controller) async {
+                  final query = controller.text;
+                  final repository = ref.read(productsRepositoryProvider);
+                  final results = await repository.filterProducts(
+                    searchQuery: query,
+                  );
 
-          if (results.isEmpty) {
-            return [
-              const ListTile(
-                title: Text('Aucun produit trouvé'),
-                leading: Icon(Icons.info_outline),
+                  if (results.isEmpty) {
+                    return [
+                      const ListTile(
+                        title: Text('Aucun produit trouvé'),
+                        leading: Icon(Icons.info_outline),
+                      ),
+                    ];
+                  }
+
+                  return results.take(5).map((product) {
+                    return ListTile(
+                      leading: const Icon(Icons.inventory_2_outlined),
+                      title: Text(product.name),
+                      subtitle: Text(
+                        'Prix : ${product.salePrice} FCFA | Stock : ${product.stockQuantity}',
+                      ),
+                      onTap: () {
+                        controller.closeView(product.name);
+                        _onSearchChanged(product.name);
+                      },
+                    );
+                  }).toList();
+                },
               ),
-            ];
-          }
-
-          return results.take(5).map((product) {
-            return ListTile(
-
-              leading: const Icon(Icons.inventory_2_outlined),
-              title: Text(product.name),
-              subtitle: Text(
-                'Prix : ${product.salePrice} FCFA | Stock : ${product.stockQuantity}',
-              ),
-              onTap: () {
-                controller.closeView(product.name);
-                _onSearchChanged(product.name);
-              },
-            );
-          }).toList();
-        }
-                  ),
-                const SizedBox(height: 9),
-
-
-          ]),
-
+              const SizedBox(height: 9),
+            ],
+          ),
         ],
       ),
     );
