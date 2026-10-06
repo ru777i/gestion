@@ -8,6 +8,16 @@ class UsersService {
 
   UsersService(this.database);
 
+  /// Vérifie les identifiants et connecte un utilisateur actif.
+  Future<User?> login(String username, String password) async {
+    return await (database.select(database.users)
+          ..where((user) =>
+              user.username.equals(username) &
+              user.passwordHash.equals(password) &
+              user.isActive.equals(1)))
+        .getSingleOrNull();
+  }
+
   Future<int> createUser({
     required String username,
     required String fullName,

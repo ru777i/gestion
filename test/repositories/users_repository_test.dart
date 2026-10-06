@@ -29,7 +29,7 @@ void main() {
     final id = await repository.createUser(
       username: 'admin',
       fullName: 'Administrateur',
-      passwordHash: 'hash-test-123',
+      password: 'hash-test-123',
       role: 'patron',
     );
 
@@ -38,16 +38,34 @@ void main() {
     expect(user, isNotNull);
     expect(user!.username, 'admin');
     expect(user.fullName, 'Administrateur');
-    expect(user.passwordHash, 'hash-test-123');
     expect(user.role, 'patron');
     expect(user.isActive, 1);
+  });
+
+  test('Connexion utilisateur valide et invalide avec hachage', () async {
+    await repository.createUser(
+      username: 'patron1',
+      fullName: 'Boss',
+      password: 'pass123',
+      role: 'patron',
+    );
+
+    final loggedUser = await repository.login('patron1', 'pass123');
+    expect(loggedUser, isNotNull);
+    expect(loggedUser!.username, 'patron1');
+
+    final wrongPass = await repository.login('patron1', 'badpass');
+    expect(wrongPass, isNull);
+
+    final wrongUser = await repository.login('unknown', 'pass123');
+    expect(wrongUser, isNull);
   });
 
   test('Un utilisateur peut être recherché par nomUtilisateur', () async {
     await repository.createUser(
       username: 'vendeur1',
       fullName: 'Jean Dupont',
-      passwordHash: 'hash-vendeur',
+      password: 'hash-vendeur',
       role: 'vendeur',
     );
 
@@ -69,7 +87,7 @@ void main() {
     final id = await repository.createUser(
       username: 'vendeur2',
       fullName: 'Paul Martin',
-      passwordHash: 'hash-paul',
+      password: 'hash-paul',
       role: 'vendeur',
     );
 
