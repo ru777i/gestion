@@ -12,7 +12,7 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: 16,
+        horizontal: 0,
         vertical: 8,
       ),
       child: Align(
@@ -20,7 +20,7 @@ class SectionTitle extends StatelessWidget {
         child: Text(
           title,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.grey[600],
           ),

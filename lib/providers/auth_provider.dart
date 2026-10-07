@@ -74,14 +74,14 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Vérifie si un utilisateur est actuellement authentifié.
 
-  Future<void> register(
+  Future<int> register(
     String username,
     String fullNam,
     String password,
     String role,
   ) async {
     final repository = ref.read(usersRepositoryProvider);
-    repository.createUser(
+   return repository.createUser(
       username: username,
       fullName: fullNam,
       password: password,

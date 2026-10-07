@@ -150,7 +150,12 @@ class UsersService {
 
     return query;
   }
-
+   Future<bool>  activerUser(int id) async {
+    final updated = await (database.update(database.users)
+              ..where((user) => user.id.equals(id)))
+            .write(const UsersCompanion(isActive: Value(1)));
+    return updated > 0;
+   }
   Future<bool> deactivateUser(int id) async {
     final updated =
         await (database.update(database.users)

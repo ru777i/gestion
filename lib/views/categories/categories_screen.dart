@@ -158,16 +158,6 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         elevation: 10,
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu_rounded),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
         actions: [
           IconButton(
             icon: Icon(

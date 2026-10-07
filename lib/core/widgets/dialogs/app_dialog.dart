@@ -5,6 +5,8 @@ class AppDialog {
     required BuildContext context,
     required String title,
     required String message,
+    VoidCallback? onCancel,
+    VoidCallback? onConfirm,
     String confirmText = 'Confirmer',
     String cancelText = 'Annuler',
     bool isDanger = false,
@@ -19,7 +21,13 @@ class AppDialog {
         content: Text(message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () {
+              if (onCancel != null) {
+                onCancel();
+              } else {
+                Navigator.pop(context, false);
+              }
+            },
             child: Text(cancelText),
           ),
           ElevatedButton(
@@ -30,7 +38,13 @@ class AppDialog {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              if (onConfirm != null) {
+                onConfirm();
+              } else {
+                Navigator.pop(context, true);
+              }
+            },
             child: Text(confirmText),
           ),
         ],

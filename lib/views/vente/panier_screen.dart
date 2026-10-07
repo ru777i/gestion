@@ -98,11 +98,14 @@ class _PanierScreenState extends ConsumerState<PanierScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
                               leading: CircleAvatar(
                                 backgroundColor: Theme.of(context)
                                     .primaryColor
@@ -163,8 +166,9 @@ class _PanierScreenState extends ConsumerState<PanierScreen> {
                                   ),
                                 ],
                               ),
-                            ),
-                          );
+                        ),
+                      ),
+                    );
                         },
                       );
                     },

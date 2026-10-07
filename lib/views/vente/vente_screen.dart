@@ -262,11 +262,14 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: product.photoPath != null
@@ -366,6 +369,7 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
                                   ),
                                 ),
                               ),
+                        ),
                       ),
                     );
                   },

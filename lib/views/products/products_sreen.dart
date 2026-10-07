@@ -93,7 +93,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
     if (scannedCode != null && scannedCode.isNotEmpty) {
       setState(() {
         _onSearchChanged(scannedCode);
-        _searchController.text=scannedCode;
+        _searchController.text = scannedCode;
       });
     }
   }
@@ -127,17 +127,6 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
         title: const Text(
           'Mes produits',
           style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu_rounded),
-              onPressed: () {
-                // Ouvre le menu latéral (Drawer)
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
         ),
         elevation: 0,
       ),
@@ -198,7 +187,6 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                             : IconButton(
                                 icon: Icon(Icons.qr_code_2),
                                 onPressed: () {
-
                                   _scanBarcode();
                                 },
                               ),

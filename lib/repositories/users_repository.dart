@@ -14,6 +14,9 @@ class UsersRepository {
     final hashedPassword = HashUtil.hashPassword(password);
     return service.login(username, hashedPassword);
   }
+  Future<bool> activerUser(int id) {
+    return service.activerUser(id);
+  }
 
   /// Crée un utilisateur en hachant automatiquement son mot de passe en clair en SHA-256.
   Future<int> createUser({
@@ -28,6 +31,17 @@ class UsersRepository {
       fullName: fullName,
       passwordHash: hashedPassword,
       role: role,
+    );
+  }
+  Future<List<User>> filterUsers({
+    String? searchQuery,
+    String? role,
+    bool ascending = true,
+  }) {
+    return service.filterUsers(
+      searchQuery: searchQuery,
+      role: role,
+      ascending: ascending,
     );
   }
 

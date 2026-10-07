@@ -10,7 +10,7 @@ class Users extends Table {
   TextColumn get passwordHash => text().named('password_hash')();
 
   TextColumn get role => text().check(
-    role.isIn(const ['patron', 'vendeur']),
+    role.isIn(const ['patron', 'vendeur', 'admin', 'user', 'caissier']),
   )();
 
   IntColumn get isActive => integer()
