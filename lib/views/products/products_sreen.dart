@@ -124,6 +124,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
       // BARRE D'APPLICATION (APP BAR)
       // ----------------------------------------------------------
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
           'Mes produits',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -404,6 +405,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
       // BOUTON FLOTTANT D'AJOUT (FAB)
       // ----------------------------------------------------------
       floatingActionButton: FloatingActionButton(
+        heroTag: 'products_fab',
         onPressed: _createProduct,
         child: const Icon(Icons.add),
       ),

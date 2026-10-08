@@ -46,44 +46,35 @@ class AuthNotifier extends Notifier<AuthState> {
       final repository = ref.read(usersRepositoryProvider);
       final user = await repository.login(username.trim(), password.trim());
 
-      if (user != null) {
-        state = state.copyWith(
-          currentUser: user,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        );
-        return true;
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          isAuthenticated: false,
-          error: 'Nom d\'utilisateur ou mot de passe incorrect.',
-        );
-        return false;
-      }
+      state = state.copyWith(
+        currentUser: user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      );
+      return true;
     } catch (e) {
+      final message = e.toString().replaceAll('Exception: ', '');
       state = state.copyWith(
         isLoading: false,
         isAuthenticated: false,
-        error: 'Erreur de connexion : ${e.toString()}',
+        error: message,
       );
       return false;
     }
   }
 
-  /// Vérifie si un utilisateur est actuellement authentifié.
-
+  /// Inscription d'un nouvel utilisateur
   Future<int> register(
     String username,
-    String fullNam,
+    String fullName,
     String password,
     String role,
   ) async {
     final repository = ref.read(usersRepositoryProvider);
-   return repository.createUser(
+    return repository.createUser(
       username: username,
-      fullName: fullNam,
+      fullName: fullName,
       password: password,
       role: role,
     );

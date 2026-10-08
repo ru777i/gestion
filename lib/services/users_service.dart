@@ -10,12 +10,45 @@ class UsersService {
 
   /// Vérifie les identifiants et connecte un utilisateur actif.
   Future<User?> login(String username, String password) async {
-    return await (database.select(database.users)
-          ..where((user) =>
+    return await (database.select(database.users)..where(
+          (user) =>
               user.username.equals(username) &
               user.passwordHash.equals(password) &
-              user.isActive.equals(1)))
+              user.isActive.equals(1),
+        ))
         .getSingleOrNull();
+  }
+
+  Future<bool> deleteUser(int id) async {
+    final deleted = await (database.delete(
+      database.users,
+    )..where((c) => c.id.equals(id))).go();
+    return deleted > 0;
+  }
+
+  Future<bool> updateUser({
+    required int id,
+    required String username,
+    String? fullName,
+    String? passwordHash,
+    required String role,
+  }) async {
+    final updated =
+        await (database.update(
+          database.users,
+        )..where((c) => c.id.equals(id))).write(
+          UsersCompanion(
+            fullName: fullName != null ? Value(fullName) : const Value.absent(),
+            username: Value(username),
+            passwordHash: passwordHash != null
+                ? Value(passwordHash)
+                : const Value.absent(),
+            role: Value(role),
+            updatedAt: Value(DateTime.now().toIso8601String()),
+          ),
+        );
+
+    return updated > 0;
   }
 
   Future<int> createUser({
@@ -150,12 +183,15 @@ class UsersService {
 
     return query;
   }
-   Future<bool>  activerUser(int id) async {
-    final updated = await (database.update(database.users)
+
+  Future<bool> activerUser(int id) async {
+    final updated =
+        await (database.update(database.users)
               ..where((user) => user.id.equals(id)))
             .write(const UsersCompanion(isActive: Value(1)));
     return updated > 0;
-   }
+  }
+
   Future<bool> deactivateUser(int id) async {
     final updated =
         await (database.update(database.users)

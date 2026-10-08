@@ -9,30 +9,57 @@ class UsersRepository {
 
   UsersRepository(this.service);
 
-  /// Authentifie un utilisateur en hachant d'abord le mot de passe en clair en SHA-256.
-  Future<User?> login(String username, String password) {
+  /// Authentifie un utilisateur en vérifiant son existence, son statut et son mot de passe haché.
+  Future<User?> login(String username, String password) async {
+    final user = await service.findByUsername(username.trim());
+    if (user == null) {
+      return null;
+    }
+    if (user.isActive != 1) {
+      throw Exception('Ce compte utilisateur a été désactivé.');
+    }
+
     final hashedPassword = HashUtil.hashPassword(password);
-    return service.login(username, hashedPassword);
+    if (user.passwordHash != hashedPassword) {
+      return null;
+    }
+
+    return user;
   }
+
+  /// Active un utilisateur désactivé.
   Future<bool> activerUser(int id) {
     return service.activerUser(id);
   }
 
-  /// Crée un utilisateur en hachant automatiquement son mot de passe en clair en SHA-256.
+  /// Supprime définitivement un utilisateur.
+  Future<bool> deleteUser(int id) {
+    return service.deleteUser(id);
+  }
+
+  /// Crée un utilisateur après vérification de l'unicité du nom d'utilisateur.
   Future<int> createUser({
     required String username,
     required String fullName,
     required String password,
     required String role,
-  }) {
+  }) async {
+    final existingUser = await service.findByUsername(username.trim());
+    if (existingUser != null) {
+      throw Exception(
+        'Le nom d\'utilisateur "${username.trim()}" est déjà utilisé.',
+      );
+    }
+
     final hashedPassword = HashUtil.hashPassword(password);
     return service.createUser(
-      username: username,
-      fullName: fullName,
+      username: username.trim(),
+      fullName: fullName.trim(),
       passwordHash: hashedPassword,
       role: role,
     );
   }
+
   Future<List<User>> filterUsers({
     String? searchQuery,
     String? role,
@@ -46,11 +73,34 @@ class UsersRepository {
   }
 
   Future<User?> findByUsername(String username) {
-    return service.findByUsername(username);
+    return service.findByUsername(username.trim());
   }
 
   Future<User?> findById(int id) {
     return service.findById(id);
+  }
+
+  /// Met à jour les informations d'un utilisateur et optionnellement son mot de passe haché.
+  Future<bool> updateUser({
+    required int id,
+    String? fullname,
+    required String username,
+    required String role,
+    String? passwordHash,
+  }) async {
+    String? hashedPassword;
+
+    if (passwordHash != null && passwordHash.trim().isNotEmpty) {
+      hashedPassword = HashUtil.hashPassword(passwordHash.trim());
+    }
+
+    return await service.updateUser(
+      id: id,
+      fullName: fullname,
+      username: username,
+      role: role,
+      passwordHash: hashedPassword,
+    );
   }
 
   Future<bool> deactivateUser(int id) {

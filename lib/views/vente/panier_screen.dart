@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gestion_stock/core/database/app_database.dart';
+import 'package:gestion_stock/core/widgets/dialogs/scafold_mesage.dart';
 import 'package:gestion_stock/providers/products_provider.dart';
 import 'package:gestion_stock/providers/sale_items_provider.dart';
+import 'package:gestion_stock/views/vente/vente_screen.dart';
 import 'package:gestion_stock/views/vente/widgets/valider_vente_sheet.dart';
 
 class PanierScreen extends ConsumerStatefulWidget {
@@ -29,7 +31,9 @@ class _PanierScreenState extends ConsumerState<PanierScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.of(context).pop();
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
           },
         ),
         actions: [
@@ -81,17 +85,21 @@ class _PanierScreenState extends ConsumerState<PanierScreen> {
                             const SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final item = paniers[index];
+                          final productId = item.productId.value;
+                          final unitPrice = item.unitPrice.value;
+                          final quantity = item.quantity.value;
+                          final subtotal = item.subtotal.value;
 
                           // Product match
                           Product? product;
                           try {
                             product = productsList.firstWhere(
-                              (p) => p.id == item.productId,
+                              (p) => p.id == productId,
                             );
                           } catch (_) {}
 
                           final productName =
-                              product?.name ?? 'Produit #${item.productId}';
+                              product?.name ?? 'Produit #$productId';
 
                           return Card(
                             elevation: 1,
@@ -106,69 +114,67 @@ class _PanierScreenState extends ConsumerState<PanierScreen> {
                                   horizontal: 16,
                                   vertical: 8,
                                 ),
-                              leading: CircleAvatar(
-                                backgroundColor: Theme.of(context)
-                                    .primaryColor
-                                    .withOpacity(0.1),
-                                child: Icon(
-                                  Icons.inventory_2_outlined,
-                                  color: Theme.of(context).primaryColor,
+                                title: Text(
+                                  productName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'PU: $unitPrice FCFA',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.remove_circle_outline,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () {
+                                        panierNotifier.decrementQuantity(
+                                          productId,
+                                        );
+                                      },
+                                    ),
+                                    Text(
+                                      '$quantity',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.add_circle_outline,
+                                        color: Colors.green,
+                                      ),
+                                      onPressed: () async {
+                                        final error = await panierNotifier
+                                            .incrementQuantity(productId);
+                                        if (error != null && context.mounted) {
+                                          ScaffoldMessage.showError(
+                                            context,
+                                            error,
+                                          );
+                                        }
+                                      },
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '$subtotal FCFA',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              title: Text(
-                                productName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'PU: ${item.unitPrice ?? 0} FCFA',
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.remove_circle_outline,
-                                      color: Colors.red,
-                                    ),
-                                    onPressed: () {
-                                      panierNotifier
-                                          .decrementQuantity(item.productId!);
-                                    },
-                                  ),
-                                  Text(
-                                    '${item.quantity ?? 0}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.add_circle_outline,
-                                      color: Colors.green,
-                                    ),
-                                    onPressed: () {
-                                      panierNotifier
-                                          .incrementQuantity(item.productId!);
-                                    },
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${item.subtotal ?? 0} FCFA',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                        ),
-                      ),
-                    );
+                            ),
+                          );
                         },
                       );
                     },
@@ -224,7 +230,9 @@ class _PanierScreenState extends ConsumerState<PanierScreen> {
                           if (success == true) {
                             messenger.showSnackBar(
                               const SnackBar(
-                                content: Text('Vente enregistrée avec succès !'),
+                                content: Text(
+                                  'Vente enregistrée avec succès !',
+                                ),
                                 backgroundColor: Colors.green,
                               ),
                             );

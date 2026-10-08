@@ -1,6 +1,8 @@
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gestion_stock/core/database/app_database.dart';
 import 'package:gestion_stock/core/database/database_provider.dart';
+import 'package:gestion_stock/providers/products_provider.dart';
 
 import '../repositories/sale_items_repository.dart';
 
@@ -11,28 +13,32 @@ final saleItemsRepositoryProvider = Provider<SaleItemsRepository>((ref) {
 
 /// Provider du panier
 final panierNotifierProvider =
-    NotifierProvider<PanierNotifier, List<SaleItemFilter>>(PanierNotifier.new);
+    NotifierProvider<PanierNotifier, List<SaleItemsCompanion>>(PanierNotifier.new);
 
 /// Notifier qui gère le panier
-class PanierNotifier extends Notifier<List<SaleItemFilter>> {
+class PanierNotifier extends Notifier<List<SaleItemsCompanion>> {
   @override
-  List<SaleItemFilter> build() {
+  List<SaleItemsCompanion> build() {
     return [];
   }
 
   /// Vérifie si un produit existe déjà dans le panier
   bool containsProduct(int productId) {
-    return state.any((item) => item.productId == productId);
+    return state.any((item) => item.productId.value == productId);
   }
 
-  /// Ajoute un produit au panier
-  void addProduct(Product product) {
-    // Évite d'ajouter deux fois le même produit
-    if (containsProduct(product.id)) {
-      return;
+  /// Ajoute un produit au panier si le stock est suffisant
+  String? addProduct(Product product) {
+    if (product.stockQuantity <= 0) {
+      return 'Le produit "${product.name}" est en rupture de stock.';
     }
 
-    final saleItem = SaleItemFilter(
+    if (containsProduct(product.id)) {
+      return 'Le produit est déjà dans le panier.';
+    }
+
+    final saleItem = SaleItemsCompanion.insert(
+      saleId: 0,
       productId: product.id,
       quantity: 1,
       unitPrice: product.salePrice,
@@ -40,41 +46,16 @@ class PanierNotifier extends Notifier<List<SaleItemFilter>> {
     );
 
     state = [...state, saleItem];
-  }
-
-  /// Ajoute directement un SaleItem
-  void addSaleItem({
-    int? id,
-    int? saleId,
-    required int productId,
-    required int quantity,
-    required int unitPrice,
-  }) {
-    final saleItem = SaleItemFilter(
-      id: id,
-      saleId: saleId,
-      productId: productId,
-      quantity: quantity,
-      unitPrice: unitPrice,
-      subtotal: quantity * unitPrice,
-    );
-
-    state = [...state, saleItem];
+    return null;
   }
 
   /// Supprime un produit du panier grâce à son ID
   void removeProduct(int productId) {
-    state = state.where((item) => item.productId != productId).toList();
-  }
-
-  /// Supprime un SaleItem
-  void removeSaleItem(SaleItemFilter saleItem) {
-    state = state.where((item) => item != saleItem).toList();
+    state = state.where((item) => item.productId.value != productId).toList();
   }
 
   /// Modifie la quantité d'un produit
   void updateQuantity(int productId, int newQuantity) {
-    // Une quantité doit être supérieure à zéro
     if (newQuantity <= 0) {
       removeProduct(productId);
       return;
@@ -82,36 +63,42 @@ class PanierNotifier extends Notifier<List<SaleItemFilter>> {
 
     state = [
       for (final item in state)
-        if (item.productId == productId)
+        if (item.productId.value == productId)
           item.copyWith(
-            quantity: newQuantity,
-            subtotal: newQuantity * (item.unitPrice ?? 0),
+            quantity: Value(newQuantity),
+            subtotal: Value(newQuantity * item.unitPrice.value),
           )
         else
           item,
     ];
   }
 
-  /// Augmente la quantité d'un produit
-  void incrementQuantity(int productId) {
-    final item = state.cast<SaleItemFilter?>().firstWhere(
-      (item) => item?.productId == productId,
+  /// Augmente la quantité d'un produit en vérifiant le stock disponible
+  Future<String?> incrementQuantity(int productId) async {
+    final item = state.cast<SaleItemsCompanion?>().firstWhere(
+      (item) => item?.productId.value == productId,
       orElse: () => null,
     );
 
     if (item == null) {
-      return;
+      return null;
     }
 
-    final currentQuantity = item.quantity ?? 0;
+    final currentQuantity = item.quantity.value;
+    final produit = await ref.read(productsRepositoryProvider).findById(productId);
+
+    if (produit != null && produit.stockQuantity <= currentQuantity) {
+      return 'Stock insuffisant pour ${produit.name} (Stock disponible : ${produit.stockQuantity})';
+    }
 
     updateQuantity(productId, currentQuantity + 1);
+    return null;
   }
 
   /// Diminue la quantité d'un produit
   void decrementQuantity(int productId) {
-    final item = state.cast<SaleItemFilter?>().firstWhere(
-      (item) => item?.productId == productId,
+    final item = state.cast<SaleItemsCompanion?>().firstWhere(
+      (item) => item?.productId.value == productId,
       orElse: () => null,
     );
 
@@ -119,8 +106,7 @@ class PanierNotifier extends Notifier<List<SaleItemFilter>> {
       return;
     }
 
-    final currentQuantity = item.quantity ?? 0;
-
+    final currentQuantity = item.quantity.value;
     updateQuantity(productId, currentQuantity - 1);
   }
 
@@ -134,49 +120,11 @@ class PanierNotifier extends Notifier<List<SaleItemFilter>> {
 
   /// Nombre total d'articles
   int get totalQuantity {
-    return state.fold(0, (total, item) => total + (item.quantity ?? 0));
+    return state.fold(0, (total, item) => total + item.quantity.value);
   }
 
   /// Montant total du panier
   int get totalAmount {
-    return state.fold(0, (total, item) => total + (item.subtotal ?? 0));
-  }
-}
-
-/// Modèle utilisé temporairement pour représenter
-/// un élément du panier avant son enregistrement en base.
-class SaleItemFilter {
-  final int? id;
-  final int? saleId;
-  final int? productId;
-  final int? quantity;
-  final int? unitPrice;
-  final int? subtotal;
-
-  const SaleItemFilter({
-    this.id,
-    this.saleId,
-    this.productId,
-    this.quantity,
-    this.unitPrice,
-    this.subtotal,
-  });
-
-  SaleItemFilter copyWith({
-    int? id,
-    int? saleId,
-    int? productId,
-    int? quantity,
-    int? unitPrice,
-    int? subtotal,
-  }) {
-    return SaleItemFilter(
-      id: id ?? this.id,
-      saleId: saleId ?? this.saleId,
-      productId: productId ?? this.productId,
-      quantity: quantity ?? this.quantity,
-      unitPrice: unitPrice ?? this.unitPrice,
-      subtotal: subtotal ?? this.subtotal,
-    );
+    return state.fold(0, (total, item) => total + item.subtotal.value);
   }
 }

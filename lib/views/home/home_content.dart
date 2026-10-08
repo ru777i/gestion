@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,27 +14,13 @@ class HomeContent extends ConsumerWidget {
     final categoriesAsync = ref.watch(filteredCategoriesProvider);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: Icon(Icons.warning),
-        backgroundColor: Colors.yellow,
-      ),
       appBar: AppBar(
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu_rounded),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
+        automaticallyImplyLeading: false,
         title: const Text(
           'Tableau de bord',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        elevation: 10,
+        elevation: 0,
         actions: [
           IconButton(
             onPressed: () {},
@@ -48,7 +33,7 @@ class HomeContent extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Banner
+            // Banner de bienvenue
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -63,8 +48,7 @@ class HomeContent extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary
-                        .withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -103,7 +87,7 @@ class HomeContent extends ConsumerWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            // Statistics Cards
+            // Cartes statistiques
             Row(
               children: [
                 Expanded(
@@ -157,5 +141,4 @@ class HomeContent extends ConsumerWidget {
       ),
     );
   }
-
 }

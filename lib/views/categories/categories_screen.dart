@@ -72,10 +72,16 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
   Future<void> _editCategory(Category category) async {
     final newNom = await CategoryFormDialog.show(context, category: category);
-    if (newNom != null && newNom.isNotEmpty && newNom != category.name && mounted) {
+    if (newNom != null &&
+        newNom.isNotEmpty &&
+        newNom != category.name &&
+        mounted) {
       try {
         final repository = ref.read(categoriesRepositoryProvider);
-        final success = await repository.updateCategory(category.id, nom: newNom);
+        final success = await repository.updateCategory(
+          category.id,
+          nom: newNom,
+        );
         if (success && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Catégorie mise à jour en "$newNom"')),
@@ -99,7 +105,9 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirmer la suppression'),
-        content: Text('Voulez-vous vraiment supprimer la catégorie "${category.name}" ?'),
+        content: Text(
+          'Voulez-vous vraiment supprimer la catégorie "${category.name}" ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -108,7 +116,10 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -152,7 +163,7 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-
+        automaticallyImplyLeading: false,
         title: const Text(
           'Gestion des Catégories',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -161,11 +172,15 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
         actions: [
           IconButton(
             icon: Icon(
-              filterState.ascending ? Icons.sort_by_alpha : Icons.sort_by_alpha_outlined,
+              filterState.ascending
+                  ? Icons.sort_by_alpha
+                  : Icons.sort_by_alpha_outlined,
             ),
             tooltip: 'Inverser le tri',
             onPressed: () {
-              ref.read(categoryFilterNotifierProvider.notifier).setAscending(!filterState.ascending);
+              ref
+                  .read(categoryFilterNotifierProvider.notifier)
+                  .setAscending(!filterState.ascending);
             },
           ),
           Stack(
@@ -212,7 +227,10 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
@@ -230,14 +248,17 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                         onDeleted: _clearSearch,
                       ),
                     ),
-                  if (filterState.startDate != null || filterState.endDate != null)
+                  if (filterState.startDate != null ||
+                      filterState.endDate != null)
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Chip(
                         avatar: const Icon(Icons.date_range, size: 16),
                         label: const Text('Filtre par date actif'),
                         onDeleted: () {
-                          ref.read(categoryFilterNotifierProvider.notifier).setDateRange(null, null);
+                          ref
+                              .read(categoryFilterNotifierProvider.notifier)
+                              .setDateRange(null, null);
                         },
                       ),
                     ),
@@ -261,19 +282,28 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.category_outlined, size: 64, color: Colors.grey.shade400),
+                        Icon(
+                          Icons.category_outlined,
+                          size: 64,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           filterState.hasActiveFilters
                               ? 'Aucune catégorie ne correspond à vos filtres'
                               : 'Aucune catégorie enregistrée',
-                          style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                         if (filterState.hasActiveFilters)
                           TextButton(
                             onPressed: () {
                               _searchController.clear();
-                              ref.read(categoryFilterNotifierProvider.notifier).reset();
+                              ref
+                                  .read(categoryFilterNotifierProvider.notifier)
+                                  .reset();
                             },
                             child: const Text('Effacer les filtres'),
                           ),
@@ -284,7 +314,8 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
 
                 return ListView.separated(
                   itemCount: categories.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final category = categories[index];
                     return ListTile(
@@ -323,14 +354,14 @@ class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(
-                child: Text('Erreur de chargement: $err'),
-              ),
+              error: (err, stack) =>
+                  Center(child: Text('Erreur de chargement: $err')),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'categories_fab',
         onPressed: _addCategory,
         icon: const Icon(Icons.add),
         label: const Text('Nouvelle catégorie'),

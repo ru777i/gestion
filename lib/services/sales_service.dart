@@ -57,11 +57,53 @@ class SalesService {
           ..where((item) => item.saleId.equals(saleId)))
         .get();
   }
+  Future<List<Sale>> findSalesBefore(DateTime date) {
+    return (database.select(database.sales)
+      ..where((sale) => sale.createdAt.isSmallerThanValue(date.toIso8601String())))
+        .get();
+  }
+Future<List<Sale>> findSalesAfter(DateTime date) {
+  return (database.select(database.sales)
+    ..where((sale) => sale.createdAt.isBiggerThanValue(date.toIso8601String())))
+      .get();
+}
+  Future<List<Sale>> findSalesOnDate(DateTime date) {
+    final start = DateTime(
+      date.year,
+      date.month,
+      date.day,
+    );
 
-  Stream<List<Sale>> watchSales({int? customerId, int? userId}) {
+    final end = start.add(const Duration(days: 1));
+
+    return (database.select(database.sales)
+      ..where(
+            (sale) =>
+        sale.createdAt.isBiggerOrEqualValue(start.toIso8601String()) &
+        sale.createdAt.isSmallerThanValue(end.toIso8601String()),
+      ))
+        .get();
+  }
+  Future<List<Sale>> findSalesBetween(
+      DateTime startDate,
+      DateTime endDate,
+      ) {
+    return (database.select(database.sales)
+      ..where(
+            (sale) =>
+        sale.createdAt.isBiggerOrEqualValue(startDate.toIso8601String()) &
+        sale.createdAt.isSmallerOrEqualValue(endDate.toIso8601String()),
+      ))
+        .get();
+  }
+
+  Stream<List<Sale>> watchSales({int? customerId, int? userId, DateTime? created_at}) {
     final query = database.select(database.sales);
     if (customerId != null) {
       query.where((s) => s.customerId.equals(customerId));
+    }
+    if (created_at != null) {
+      query.where((s) => s.createdAt.equals(created_at.toIso8601String()));
     }
     if (userId != null) {
       query.where((s) => s.userId.equals(userId));

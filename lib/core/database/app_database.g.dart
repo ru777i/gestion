@@ -1681,7 +1681,6 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     'role',
     aliasedName,
     false,
-    check: () => role.isIn(const ['patron', 'vendeur']),
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gestion_stock/core/widgets/dialogs/scafold_mesage.dart';
 import 'package:gestion_stock/providers/categories_provider.dart';
 import 'package:gestion_stock/providers/products_provider.dart';
 import 'package:gestion_stock/views/vente/panier_screen.dart';
@@ -74,6 +75,7 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
           'Nouvelle Vente',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -151,7 +153,6 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
                         _onSearchChanged(text);
                         controller.openView();
                       },
-
                       trailing: [
                         controller.text.isNotEmpty
                             ? IconButton(
@@ -168,7 +169,6 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
                             : IconButton(
                           icon: Icon(Icons.qr_code_2),
                           onPressed: () {
-
                             _scanBarcode();
                           },
                         ),
@@ -270,16 +270,26 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
                             horizontal: 12,
                             vertical: 6,
                           ),
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: product.photoPath != null
-                              ? Image.file(
-                                  File(product.photoPath!),
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Container(
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: product.photoPath != null
+                                ? Image.file(
+                                    File(product.photoPath!),
+                                    width: 50,
+                                    height: 50,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Container(
+                                      width: 50,
+                                      height: 50,
+                                      color: Colors.grey[200],
+                                      child: const Icon(
+                                        Icons.inventory_2_outlined,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  )
+                                : Container(
                                     width: 50,
                                     height: 50,
                                     color: Colors.grey[200],
@@ -288,87 +298,77 @@ class _VenteScreenState extends ConsumerState<VenteScreen> {
                                       color: Colors.grey,
                                     ),
                                   ),
-                                )
-                              : Container(
-                                  width: 50,
-                                  height: 50,
-                                  color: Colors.grey[200],
-                                  child: const Icon(
-                                    Icons.inventory_2_outlined,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                        ),
-                        title: Text(
-                          product.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
                           ),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
-                          child: Text(
-                            '${product.salePrice} FCFA  •  Stock : ${product.stockQuantity}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: product.stockQuantity <= 5
-                                  ? Colors.orange
-                                  : Colors.grey[700],
+                          title: Text(
+                            product.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
                             ),
                           ),
-                        ),
-                        trailing: isInCart
-                            ? ElevatedButton.icon(
-                                onPressed: () {
-                                  panierNotifier.removeProduct(product.id);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${product.name} retiré du panier'),
-                                      duration: const Duration(seconds: 1),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.remove_shopping_cart, size: 16),
-                                label: const Text('Retirer'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red.shade100,
-                                  foregroundColor: Colors.red.shade800,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              )
-                            : ElevatedButton.icon(
-                                onPressed: () {
-                                  panierNotifier.addProduct(product);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${product.name} ajouté au panier'),
-                                      duration: const Duration(seconds: 1),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.add_shopping_cart, size: 16),
-                                label: const Text('Ajouter'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF08796C),
-                                  foregroundColor: Colors.white,
-                                  elevation: 1,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 8,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              '${product.salePrice} FCFA  •  Stock : ${product.stockQuantity}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: product.stockQuantity <= 5
+                                    ? Colors.orange
+                                    : Colors.grey[700],
                               ),
+                            ),
+                          ),
+                          trailing: isInCart
+                              ? ElevatedButton.icon(
+                                  onPressed: () {
+                                    panierNotifier.removeProduct(product.id);
+                                    ScaffoldMessage.showInfo(
+                                      context,
+                                      '${product.name} retiré du panier',
+                                    );
+                                  },
+                                  icon: const Icon(Icons.remove_shopping_cart, size: 16),
+                                  label: const Text('Retirer'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red.shade100,
+                                    foregroundColor: Colors.red.shade800,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 8,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                )
+                              : ElevatedButton.icon(
+                                  onPressed: () {
+                                    final error = panierNotifier.addProduct(product);
+                                    if (error != null) {
+                                      ScaffoldMessage.showError(context, error);
+                                    } else {
+                                      ScaffoldMessage.showSuccess(
+                                        context,
+                                        '${product.name} ajouté au panier',
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(Icons.add_shopping_cart, size: 16),
+                                  label: const Text('Ajouter'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF08796C),
+                                    foregroundColor: Colors.white,
+                                    elevation: 1,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 8,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
                         ),
                       ),
                     );

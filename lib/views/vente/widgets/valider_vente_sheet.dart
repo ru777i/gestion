@@ -72,16 +72,6 @@ class _ValiderVenteSheetState extends ConsumerState<ValiderVenteSheet> {
         paymentStatus = 'partial';
       }
 
-      final saleItemsCompanions = items.map((item) {
-        return SaleItemsCompanion.insert(
-          saleId: 0,
-          productId: item.productId!,
-          quantity: item.quantity ?? 1,
-          unitPrice: item.unitPrice ?? 0,
-          subtotal: item.subtotal ?? 0,
-        );
-      }).toList();
-
       final salesRepo = ref.read(salesRepositoryProvider);
       final uuid = const Uuid().v4();
 
@@ -93,7 +83,7 @@ class _ValiderVenteSheetState extends ConsumerState<ValiderVenteSheet> {
         paymentMethod: _paymentMethod,
         paymentStatus: paymentStatus,
         userId: 1,
-        items: saleItemsCompanions,
+        items: items,
       );
 
       panierNotifier.clear();

@@ -83,6 +83,71 @@ void main() {
     expect(user, isNull);
   });
 
+  test('Mettre à jour les informations d’un utilisateur sans modifier son mot de passe', () async {
+    final id = await repository.createUser(
+      username: 'vendeur_old',
+      fullName: 'Ancien Nom',
+      password: 'secret123',
+      role: 'vendeur',
+    );
+
+    final success = await repository.updateUser(
+      id: id,
+      username: 'vendeur_modifie',
+      fullname: 'Nouveau Nom',
+      role: 'admin',
+    );
+
+    expect(success, isTrue);
+
+    final updatedUser = await repository.findById(id);
+    expect(updatedUser, isNotNull);
+    expect(updatedUser!.username, 'vendeur_modifie');
+    expect(updatedUser.fullName, 'Nouveau Nom');
+    expect(updatedUser.role, 'admin');
+
+    // Le mot de passe initial doit être conservé et toujours fonctionnel
+    final loginResult = await repository.login('vendeur_modifie', 'secret123');
+    expect(loginResult, isNotNull);
+  });
+
+  test('Mettre à jour le mot de passe d’un utilisateur', () async {
+    final id = await repository.createUser(
+      username: 'vendeur_pass',
+      fullName: 'Jean Pass',
+      password: 'ancien_pass',
+      role: 'vendeur',
+    );
+
+    final success = await repository.updateUser(
+      id: id,
+      username: 'vendeur_pass',
+      fullname: 'Jean Pass',
+      role: 'vendeur',
+      passwordHash: 'nouveau_pass',
+    );
+
+    expect(success, isTrue);
+
+    // Connexion avec l'ancien mot de passe échoue
+    final oldLogin = await repository.login('vendeur_pass', 'ancien_pass');
+    expect(oldLogin, isNull);
+
+    // Connexion avec le nouveau mot de passe réussit
+    final newLogin = await repository.login('vendeur_pass', 'nouveau_pass');
+    expect(newLogin, isNotNull);
+  });
+
+  test('La mise à jour d’un utilisateur inexistant retourne false', () async {
+    final result = await repository.updateUser(
+      id: 9999,
+      username: 'inexistant',
+      role: 'vendeur',
+    );
+
+    expect(result, isFalse);
+  });
+
   test('Un utilisateur peut être désactivé', () async {
     final id = await repository.createUser(
       username: 'vendeur2',

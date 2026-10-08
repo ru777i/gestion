@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gestion_stock/core/widgets/dialogs/app_dialog.dart';
 import 'package:gestion_stock/views/auth/register_screen.dart';
+import 'package:gestion_stock/views/home/homeScreen.dart';
 
+import '../../core/database/app_database.dart';
 import '../../providers/users_provider.dart';
+import '../home/more_screen.dart';
 
 /// Écran de gestion et de recherche des utilisateurs.
 class UsersScreen extends ConsumerStatefulWidget {
@@ -24,6 +28,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
   void _onSearchChanged(String value) {
     ref.read(userFilterNotifierProvider.notifier).setSearchQuery(value);
   }
+
   Future<void> _reactiverUser(int id) async {
     final succes = await ref.read(usersRepositoryProvider).activerUser(id);
     if (succes && mounted) {
@@ -48,12 +53,50 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
     }
   }
 
+  Future<void> _confirmDeleteUser(User user) async {
+    final confirm = await AppDialog.showConfirmation(
+      context: context,
+      title: 'Supprimer l\'utilisateur',
+      message:
+          'Voulez-vous vraiment supprimer définitivement "${user.fullName}" (@${user.username}) ?',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      isDanger: true,
+    );
+
+    if (confirm == true && mounted) {
+      final success = await ref
+          .read(usersRepositoryProvider)
+          .deleteUser(user.id);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Utilisateur "${user.username}" supprimé avec succès',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(filteredUsersProvider);
 
     return Scaffold(
       appBar: AppBar(
+        // leading: IconButton(
+        //   onPressed: () {
+        //     Navigator.pushAndRemoveUntil(
+        //       context,
+        //       MaterialPageRoute(builder: (context) => const Homescreen()),
+        //           (route) => false,
+        //     );
+        //   },
+        //   icon: const Icon(Icons.keyboard_backspace),
+        // ),
         title: const Text(
           'Gestion des Utilisateurs',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -63,9 +106,8 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
           IconButton(
             tooltip: 'Ajouter un utilisateur',
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const RegisterScreen()),
-              );
+              Navigator.of(context)
+                  .push(MaterialPageRoute(builder: (_) => RegisterScreen()));
             },
             icon: const Icon(Icons.person_add_outlined),
           ),
@@ -99,7 +141,11 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                   trailing: [
                     if (controller.text.isNotEmpty)
                       IconButton(
-                        icon: const Icon(Icons.clear, size: 20, color: Colors.grey),
+                        icon: const Icon(
+                          Icons.clear,
+                          size: 20,
+                          color: Colors.grey,
+                        ),
                         onPressed: () {
                           controller.clear();
                           _onSearchChanged('');
@@ -152,14 +198,17 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
 
                 return ListView.separated(
                   padding: const EdgeInsets.all(12),
+
                   itemCount: users.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 8),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final user = users[index];
                     final isActive = user.isActive == 1;
 
                     return Card(
                       elevation: 1,
+                      margin: EdgeInsets.zero,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -167,6 +216,14 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                         color: Colors.transparent,
                         borderRadius: BorderRadius.circular(12),
                         child: ListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => RegisterScreen(user: user),
+                              ),
+                            );
+                          },
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 8,
@@ -177,7 +234,9 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                                 : Colors.grey.shade300,
                             child: Icon(
                               Icons.person,
-                              color: isActive ? Colors.teal.shade800 : Colors.grey,
+                              color: isActive
+                                  ? Colors.teal.shade800
+                                  : Colors.grey,
                             ),
                           ),
                           title: Text(
@@ -191,26 +250,54 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                             '@${user.username}  •  Rôle : ${user.role.toUpperCase()}',
                             style: TextStyle(color: Colors.grey[600]),
                           ),
-                          trailing: isActive
-                              ? IconButton(
-                                  tooltip: 'Désactiver l\'utilisateur',
-                                  icon: const Icon(Icons.block, color: Colors.red),
-                                  onPressed: () => _deactivateUser(user.id),
-                                )
-                              : TextButton(
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 0,
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              isActive
+                                  ? IconButton(
+                                      tooltip: 'Désactiver',
+                                      icon: const Icon(
+                                        Icons.block,
+                                        color: Colors.orange,
+                                      ),
+                                      onPressed: () => _deactivateUser(user.id),
+                                    )
+                                  : ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        backgroundColor: const Color(
+                                          0xFF08796C,
+                                        ),
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                      ),
+                                      onPressed: () => _reactiverUser(user.id),
+                                      child: const Text(
+                                        'Activer',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                              IconButton(
+                                tooltip: 'Supprimer définitivement',
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () => _confirmDeleteUser(user),
                               ),
-                              backgroundColor: const Color(0xFF08796C),
-                              foregroundColor: Colors.white24,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            onPressed: () => _reactiverUser(user.id),
-                            child: Text('Activer', style: TextStyle( color:  Colors.white, fontWeight: FontWeight.bold,),),
-                          )
+                            ],
+                          ),
                         ),
                       ),
                     );

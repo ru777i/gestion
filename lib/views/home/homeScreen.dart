@@ -32,7 +32,7 @@ class _HomescreenState extends ConsumerState<Homescreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const Drawer(child: DrawerComponent()),
+      // drawer: const Drawer(child: DrawerComponent()),
       body: IndexedStack(
         index: currentIndex,
         children: pages,

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gestion_stock/core/database/app_database.dart';
 import 'package:gestion_stock/providers/auth_provider.dart';
 
-import 'login_screen.dart';
+import '../../providers/users_provider.dart';
+import '../home/more_screen.dart';
 
 /// Écran d'inscription (Register) pour créer un nouvel utilisateur.
 class RegisterScreen extends ConsumerStatefulWidget {
-  const RegisterScreen({super.key});
+  User? user;
+  RegisterScreen({super.key, this.user});
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -14,7 +17,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-
+  bool _isEdit = false;
   final _usernameController = TextEditingController();
   final _fullNameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -43,40 +46,60 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _registerUser() async {
+    String username = _usernameController.text.trim();
+    String fullname = _fullNameController.text.trim();
+    String password = _passwordController.text.trim();
+
     if (!_formKey.currentState!.validate()) return;
     if (role == null) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final userId = await ref.read(authNotifierProvider.notifier).register(
-            _usernameController.text.trim(),
-            _fullNameController.text.trim(),
-            _passwordController.text.trim(),
-            role!,
+      if (_isEdit) {
+        bool updated = await ref
+            .read(usersRepositoryProvider)
+            .updateUser(
+              id: widget.user!.id,
+              username: username,
+              role: role!,
+              passwordHash: password,
+              fullname: fullname,
+            );
+        if (updated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Compte mis à jour avec succès !'),
+              backgroundColor: Colors.green,
+            ),
           );
+          Navigator.of(context).pop();
+        }
+      } else {
+        final userId = await ref
+            .read(authNotifierProvider.notifier)
+            .register(
+              _usernameController.text.trim(),
+              _fullNameController.text.trim(),
+              _passwordController.text.trim(),
+              role!,
+            );
 
-      if (userId > 0 && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Compte créé avec succès !'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-        );
+        if (userId > 0 && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Compte créé avec succès !'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       if (mounted) {
+        final cleanError = e.toString().replaceAll('Exception: ', '$e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors de l\'inscription : $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(cleanError), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -85,9 +108,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   @override
+  void initState() {
+    if (widget.user != null) {
+      _usernameController.text = widget.user!.username;
+      _fullNameController.text = widget.user!.fullName;
+      role = widget.user!.role;
+      _isEdit = true;
+    }
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        // automaticallyImplyLeading: false,
+        //
+        // leading:  IconButton(onPressed: (){
+        //   Navigator.pushAndRemoveUntil(
+        //     context,
+        //     MaterialPageRoute(builder: (context) => const MoreScreen()),
+        //         (route) => false,
+        //   );
+        // }, icon: Icon(Icons.arrow_back)),
         elevation: 0,
         title: const Text(
           'Créer un compte',
@@ -148,7 +191,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
+                    if (value == null ||
+                        value.trim().isEmpty && _isEdit == false) {
                       return 'Veuillez saisir votre nom complet';
                     }
                     return null;
@@ -210,7 +254,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.length < 6) {
+                    if (_isEdit) {
+                      if (_passwordController.text.isNotEmpty && (value == null || value.length < 6)) {
+                        return 'Le mot de passe doit contenir au moins 6 caractères';
+                      }
+                      return null;
+                    }
+                    else if ((value == null || value.length < 6)) {
                       return 'Le mot de passe doit contenir au moins 6 caractères';
                     }
                     return null;
@@ -256,7 +306,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       bottomNavigationBar: BottomAppBar(
         elevation: 0,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           child: SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
