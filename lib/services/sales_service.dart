@@ -22,7 +22,9 @@ class SalesService {
     return await database.transaction(() async {
       final now = DateTime.now().toIso8601String();
 
-      final saleId = await database.into(database.sales).insert(
+      final saleId = await database
+          .into(database.sales)
+          .insert(
             SalesCompanion.insert(
               uuid: uuid,
               customerId: Value(customerId),
@@ -37,9 +39,9 @@ class SalesService {
           );
 
       for (final item in items) {
-        await database.into(database.saleItems).insert(
-              item.copyWith(saleId: Value(saleId)),
-            );
+        await database
+            .into(database.saleItems)
+            .insert(item.copyWith(saleId: Value(saleId)));
       }
 
       return saleId;
@@ -47,57 +49,58 @@ class SalesService {
   }
 
   Future<Sale?> findById(int id) async {
-    return await (database.select(database.sales)
-          ..where((s) => s.id.equals(id)))
-        .getSingleOrNull();
+    return await (database.select(
+      database.sales,
+    )..where((s) => s.id.equals(id))).getSingleOrNull();
   }
 
   Future<List<SaleItem>> findItemsBySaleId(int saleId) async {
-    return await (database.select(database.saleItems)
-          ..where((item) => item.saleId.equals(saleId)))
-        .get();
+    return await (database.select(
+      database.saleItems,
+    )..where((item) => item.saleId.equals(saleId))).get();
   }
+
   Future<List<Sale>> findSalesBefore(DateTime date) {
-    return (database.select(database.sales)
-      ..where((sale) => sale.createdAt.isSmallerThanValue(date.toIso8601String())))
+    return (database.select(database.sales)..where(
+          (sale) => sale.createdAt.isSmallerThanValue(date.toIso8601String()),
+        ))
         .get();
   }
-Future<List<Sale>> findSalesAfter(DateTime date) {
-  return (database.select(database.sales)
-    ..where((sale) => sale.createdAt.isBiggerThanValue(date.toIso8601String())))
-      .get();
-}
+
+  Future<List<Sale>> findSalesAfter(DateTime date) {
+    return (database.select(database.sales)..where(
+          (sale) => sale.createdAt.isBiggerThanValue(date.toIso8601String()),
+        ))
+        .get();
+  }
+
   Future<List<Sale>> findSalesOnDate(DateTime date) {
-    final start = DateTime(
-      date.year,
-      date.month,
-      date.day,
-    );
+    final start = DateTime(date.year, date.month, date.day);
 
     final end = start.add(const Duration(days: 1));
 
-    return (database.select(database.sales)
-      ..where(
-            (sale) =>
-        sale.createdAt.isBiggerOrEqualValue(start.toIso8601String()) &
-        sale.createdAt.isSmallerThanValue(end.toIso8601String()),
-      ))
-        .get();
-  }
-  Future<List<Sale>> findSalesBetween(
-      DateTime startDate,
-      DateTime endDate,
-      ) {
-    return (database.select(database.sales)
-      ..where(
-            (sale) =>
-        sale.createdAt.isBiggerOrEqualValue(startDate.toIso8601String()) &
-        sale.createdAt.isSmallerOrEqualValue(endDate.toIso8601String()),
-      ))
+    return (database.select(database.sales)..where(
+          (sale) =>
+              sale.createdAt.isBiggerOrEqualValue(start.toIso8601String()) &
+              sale.createdAt.isSmallerThanValue(end.toIso8601String()),
+        ))
         .get();
   }
 
-  Stream<List<Sale>> watchSales({int? customerId, int? userId, DateTime? created_at}) {
+  Future<List<Sale>> findSalesBetween(DateTime startDate, DateTime endDate) {
+    return (database.select(database.sales)..where(
+          (sale) =>
+              sale.createdAt.isBiggerOrEqualValue(startDate.toIso8601String()) &
+              sale.createdAt.isSmallerOrEqualValue(endDate.toIso8601String()),
+        ))
+        .get();
+  }
+
+  Stream<List<Sale>> watchSales({
+    int? customerId,
+    int? userId,
+    DateTime? created_at,
+  }) {
     final query = database.select(database.sales);
     if (customerId != null) {
       query.where((s) => s.customerId.equals(customerId));
@@ -112,8 +115,8 @@ Future<List<Sale>> findSalesAfter(DateTime date) {
   }
 
   Future<int> deleteSale(int id) async {
-    return await (database.delete(database.sales)
-          ..where((s) => s.id.equals(id)))
-        .go();
+    return await (database.delete(
+      database.sales,
+    )..where((s) => s.id.equals(id))).go();
   }
 }

@@ -37,6 +37,22 @@ class SalesRepository {
     return service.findItemsBySaleId(saleId);
   }
 
+  Future<List<Sale>> findSalesBefore(DateTime date) {
+    return service.findSalesBefore(date);
+  }
+
+  Future<List<Sale>> findSalesAfter(DateTime date) {
+    return service.findSalesAfter(date);
+  }
+
+  Future<List<Sale>> findSalesOnDate(DateTime date) {
+    return service.findSalesOnDate(date);
+  }
+
+  Future<List<Sale>> findSalesBetween(DateTime startDate, DateTime endDate) {
+    return service.findSalesBetween(startDate, endDate);
+  }
+
   Stream<List<Sale>> watchSales({int? customerId, int? userId}) {
     return service.watchSales(customerId: customerId, userId: userId);
   }
